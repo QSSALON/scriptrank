@@ -1,11 +1,13 @@
-import { clerkMiddleware } from '@clerk/nextjs/server'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
-// Gate EVERYTHING behind authentication. Any request that isn't a Next.js
-// internal/static asset must be signed in; otherwise Clerk redirects the
-// visitor to the hosted sign-in page. This is what makes the tool private:
-// an unauthenticated visitor never receives any page content.
+// The sign-in page must stay public, otherwise protecting it would cause an
+// infinite redirect loop. Everything else requires authentication.
+const isPublicRoute = createRouteMatcher(['/sign-in(.*)'])
+
 export default clerkMiddleware(async (auth, req) => {
-  await auth.protect()
+  if (!isPublicRoute(req)) {
+    await auth.protect()
+  }
 })
 
 export const config = {
